@@ -37,6 +37,7 @@ abstract class BaseApi {
 
 	/**
 	 * @return $this
+	 * @throws \Exception
 	 */
 	public function send() {
 		$this->preSendVerification();
@@ -72,7 +73,16 @@ abstract class BaseApi {
 	/**
 	 * @return array
 	 */
-	abstract protected function prepFinalRequestData();
+	protected function prepFinalRequestData() {
+		$aFinal = array(
+			'headers' => $this->getRequestHeaders()
+		);
+
+		$sDataBodyKey = ( $this->getHttpRequestMethod() == 'get' ) ? 'query' : 'json';
+		$aFinal[ $sDataBodyKey ] = $this->getRequestDataFinal();
+
+		return $aFinal;
+	}
 
 	/**
 	 * @throws \Exception
