@@ -58,6 +58,18 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * Assumes response body is json-encode.  Override for anything else
+	 * @return array
+	 */
+	protected function getDecodedResponseBody() {
+		$sResponse = array();
+		if ( !$this->hasError() ) {
+			$sResponse = json_decode( $this->getLastApiResponse()->getBody()->getContents(), $this->isDecodeAsArray() );
+		}
+		return $sResponse;
+	}
+
+	/**
 	 * @return array
 	 */
 	abstract protected function prepFinalRequestData();
