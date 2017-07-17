@@ -197,6 +197,17 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * @param string $sKey
+	 * @param string $sValue
+	 * @return $this
+	 */
+	public function setRequestHeader( $sKey, $sValue ) {
+		$aHeaders = $this->getRequestHeaders();
+		$aHeaders[ $sKey ] = $sValue;
+		return $this->setRequestHeaders( $aHeaders );
+	}
+
+	/**
 	 * @param $aHeaders
 	 * @return $this
 	 */
