@@ -37,6 +37,7 @@ abstract class BaseApi {
 
 	/**
 	 * @return $this
+	 * @throws \Exception
 	 */
 	public function send() {
 		$this->preSendVerification();
@@ -58,9 +59,30 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * Assumes response body is json-encode.  Override for anything else
 	 * @return array
 	 */
-	abstract protected function prepFinalRequestData();
+	protected function getDecodedResponseBody() {
+		$sResponse = array();
+		if ( !$this->hasError() ) {
+			$sResponse = json_decode( $this->getLastApiResponse()->getBody()->getContents(), $this->isDecodeAsArray() );
+		}
+		return $sResponse;
+	}
+
+	/**
+	 * @return array
+	 */
+	protected function prepFinalRequestData() {
+		$aFinal = array(
+			'headers' => $this->getRequestHeaders()
+		);
+
+		$sDataBodyKey = ( $this->getHttpRequestMethod() == 'get' ) ? 'query' : 'json';
+		$aFinal[ $sDataBodyKey ] = $this->getRequestDataFinal();
+
+		return $aFinal;
+	}
 
 	/**
 	 * @throws \Exception
@@ -182,6 +204,17 @@ abstract class BaseApi {
 	 */
 	public function setRequestContentType( $sType ) {
 		return $this->setRawDataItem( 'request_content_type', $sType );
+	}
+
+	/**
+	 * @param string $sKey
+	 * @param string $sValue
+	 * @return $this
+	 */
+	public function setRequestHeader( $sKey, $sValue ) {
+		$aHeaders = $this->getRequestHeaders();
+		$aHeaders[ $sKey ] = $sValue;
+		return $this->setRequestHeaders( $aHeaders );
 	}
 
 	/**
