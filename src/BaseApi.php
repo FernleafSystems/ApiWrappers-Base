@@ -5,7 +5,8 @@ namespace FernleafSystems\Apis\Base;
 use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\ResponseInterface;
 
 abstract class BaseApi {
 
@@ -43,14 +44,14 @@ abstract class BaseApi {
 		$this->preSendVerification();
 
 		$oClient = $this->getHttpRequest();
-		$oRequest = $oClient->createRequest(
+
+		$oRequest = new Request(
 			$this->getHttpRequestMethod(),
-			$this->getUrlEndpoint(),
-			$this->prepFinalRequestData()
+			$this->getUrlEndpoint()
 		);
 		try {
 			$this->setLastError( null )
-				 ->setLastApiResponse( $oClient->send( $oRequest ) );
+				 ->setLastApiResponse( $oClient->send( $oRequest, $this->prepFinalRequestData() ) );
 		}
 		catch ( RequestException $oRE ) {
 			$this->setLastError( $oRE );
