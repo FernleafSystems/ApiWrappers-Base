@@ -111,7 +111,7 @@ abstract class BaseApi {
 	 */
 	protected function getHttpRequest() {
 		if ( empty( $this->oHttp ) ) {
-			$this->oHttp = new Client( array( 'base_url' => $this->getBaseUrl() ) );
+			$this->oHttp = new Client( array( 'base_uri' => $this->getBaseUrl() ) );
 		}
 		return $this->oHttp;
 	}
