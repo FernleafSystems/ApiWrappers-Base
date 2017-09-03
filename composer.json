@@ -1,5 +1,6 @@
 {
-  "name":         "fernleafsystems/apis/base",
+  "name":         "fernleafsystems/apiwrappers-base",
+  "description":  "Forms the basis, and simplifies the implementation, of all Fernleaf Systems' API Wrappers",
   "authors":      [
 	{
 	  "name":     "Paul Goodchild",
@@ -7,13 +8,11 @@
 	  "homepage": "https://paulgoodchild.me"
 	}
   ],
+  "license":      "MIT",
   "repositories": [
-	{
-	  "type": "vcs",
-	  "url":  "https://github.com/FernleafSystems/Utilities.git"
-	}
   ],
   "require":      {
+	"php":                       ">=5.5.0",
 	"fernleafsystems/utilities": "^1.0",
 	"guzzlehttp/guzzle":         "^6.0"
   },
@@ -21,7 +20,7 @@
   },
   "autoload":     {
 	"psr-4": {
-	  "FernleafSystems\\Apis\\Base\\": "src"
+	  "FernleafSystems\\ApiWrappers\\Base\\": "src"
 	}
   }
 }

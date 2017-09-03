@@ -1,6 +1,6 @@
 <?php
 
-namespace FernleafSystems\Apis\Base;
+namespace FernleafSystems\ApiWrappers\Base;
 
 use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 use GuzzleHttp\Client;
@@ -8,6 +8,10 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * Class BaseApi
+ * @package FernleafSystems\ApiWrappers\Base
+ */
 abstract class BaseApi {
 
 	use ConnectionConsumer,

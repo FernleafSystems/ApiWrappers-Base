@@ -1,10 +1,10 @@
 <?php
 
-namespace FernleafSystems\Apis\Base;
+namespace FernleafSystems\ApiWrappers\Base;
 
 /**
  * Class Connection
- * @package FernleafSystems\Apis\Base
+ * @package FernleafSystems\ApiWrappers\Base
  */
 class Connection {
 

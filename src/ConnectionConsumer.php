@@ -1,7 +1,11 @@
 <?php
 
-namespace FernleafSystems\Apis\Base;
+namespace FernleafSystems\ApiWrappers\Base;
 
+/**
+ * Trait ConnectionConsumer
+ * @package FernleafSystems\ApiWrappers\Base
+ */
 trait ConnectionConsumer {
 
 	/**
