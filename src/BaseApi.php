@@ -1,12 +1,17 @@
 <?php
 
-namespace FernleafSystems\Apis\Base;
+namespace FernleafSystems\ApiWrappers\Base;
 
 use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\ResponseInterface;
 
+/**
+ * Class BaseApi
+ * @package FernleafSystems\ApiWrappers\Base
+ */
 abstract class BaseApi {
 
 	use ConnectionConsumer,
@@ -43,14 +48,14 @@ abstract class BaseApi {
 		$this->preSendVerification();
 
 		$oClient = $this->getHttpRequest();
-		$oRequest = $oClient->createRequest(
+
+		$oRequest = new Request(
 			$this->getHttpRequestMethod(),
-			$this->getUrlEndpoint(),
-			$this->prepFinalRequestData()
+			$this->getUrlEndpoint()
 		);
 		try {
 			$this->setLastError( null )
-				 ->setLastApiResponse( $oClient->send( $oRequest ) );
+				 ->setLastApiResponse( $oClient->send( $oRequest, $this->prepFinalRequestData() ) );
 		}
 		catch ( RequestException $oRE ) {
 			$this->setLastError( $oRE );
@@ -62,12 +67,19 @@ abstract class BaseApi {
 	 * Assumes response body is json-encode.  Override for anything else
 	 * @return array
 	 */
-	protected function getDecodedResponseBody() {
+	public function getDecodedResponseBody() {
 		$sResponse = array();
 		if ( !$this->hasError() ) {
-			$sResponse = json_decode( $this->getLastApiResponse()->getBody()->getContents(), $this->isDecodeAsArray() );
+			$sResponse = json_decode( $this->getResponseBodyContentRaw(), $this->isDecodeAsArray() );
 		}
 		return $sResponse;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getResponseBodyContentRaw() {
+		return $this->getLastApiResponse()->getBody()->getContents();
 	}
 
 	/**
@@ -103,7 +115,7 @@ abstract class BaseApi {
 	 */
 	protected function getHttpRequest() {
 		if ( empty( $this->oHttp ) ) {
-			$this->oHttp = new Client( array( 'base_url' => $this->getBaseUrl() ) );
+			$this->oHttp = new Client( array( 'base_uri' => $this->getBaseUrl() ) );
 		}
 		return $this->oHttp;
 	}
