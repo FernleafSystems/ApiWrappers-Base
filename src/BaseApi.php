@@ -189,6 +189,20 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * @return int[]
+	 */
+	public function getSuccessfulResponseCodes() {
+		return [ 200, 201 ];
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isLastRequestSuccess() {
+		return in_array( $this->getLastApiResponse()->getStatusCode(), $this->getSuccessfulResponseCodes() );
+	}
+
+	/**
 	 * @return bool
 	 */
 	public function hasError() {
