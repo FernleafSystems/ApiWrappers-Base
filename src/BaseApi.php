@@ -17,17 +17,14 @@ abstract class BaseApi {
 	use ConnectionConsumer,
 		StdClassAdapter;
 	const REQUEST_METHOD = 'post';
-
 	/**
 	 * @var Client
 	 */
 	protected $oHttp;
-
 	/**
 	 * @var RequestException
 	 */
 	protected $oLastError;
-
 	/**
 	 * @var ResponseInterface
 	 */
@@ -90,9 +87,14 @@ abstract class BaseApi {
 			'headers' => $this->getRequestHeaders()
 		);
 
-		$sDataBodyKey = ( $this->getHttpRequestMethod() == 'get' ) ? 'query' : 'json';
-		$aFinal[ $sDataBodyKey ] = $this->getRequestDataFinal();
-
+		$sChannel = $this->getDataChannel();
+		if ( $sChannel == 'query' ) {
+			$aFinal[ 'query' ] = array_merge( $this->getRequestDataFinal(), $this->getRequestQueryData() );
+		}
+		else {
+			$aFinal[ 'query' ] = $this->getRequestQueryData();
+			$aFinal[ $sChannel ] = $this->getRequestDataFinal();
+		}
 		return $aFinal;
 	}
 
@@ -160,6 +162,13 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * @return string
+	 */
+	public function getDataChannel() {
+		return ( $this->getHttpRequestMethod() == 'get' ) ? 'query' : 'json';
+	}
+
+	/**
 	 * @param string $sKey
 	 * @return mixed|null
 	 */
@@ -189,10 +198,22 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * This allows us to set Query Params separately to the body of an API request, ?asdf=ghijk
+	 * @return array
+	 */
+	public function getRequestQueryData() {
+		return $this->getArrayParam( 'reqquery' );
+	}
+
+	/**
 	 * @return int[]
 	 */
 	public function getSuccessfulResponseCodes() {
 		return [ 200, 201 ];
+	}
+
+	public function hasRequestDataItem( $sKey ) {
+		return array_key_exists( $sKey, $this->getRequestData() );
 	}
 
 	/**
@@ -217,11 +238,42 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * @param string $sItemKey
+	 * @return $this
+	 */
+	public function removeRequestDataItem( $sItemKey ) {
+		$aData = $this->getRequestData();
+		if ( array_key_exists( $sItemKey, $aData ) ) {
+			unset( $aData[ $sItemKey ] );
+			$this->setRequestData( $aData, false );
+		}
+		return $this;
+	}
+
+	/**
 	 * @param bool $bDecodeAsObject
 	 * @return $this
 	 */
 	public function setDecodeAsArray( $bDecodeAsObject ) {
 		return $this->setRawDataItem( 'decode_response_as_array', $bDecodeAsObject );
+	}
+
+	/**
+	 * @param ResponseInterface $oLastApiResponse
+	 * @return $this
+	 */
+	public function setLastApiResponse( $oLastApiResponse ) {
+		$this->oLastResponse = $oLastApiResponse;
+		return $this;
+	}
+
+	/**
+	 * @param RequestException $oLastError
+	 * @return $this
+	 */
+	public function setLastError( $oLastError ) {
+		$this->oLastError = $oLastError;
+		return $this;
 	}
 
 	/**
@@ -252,37 +304,6 @@ abstract class BaseApi {
 	}
 
 	/**
-	 * @param ResponseInterface $oLastApiResponse
-	 * @return $this
-	 */
-	public function setLastApiResponse( $oLastApiResponse ) {
-		$this->oLastResponse = $oLastApiResponse;
-		return $this;
-	}
-
-	/**
-	 * @param RequestException $oLastError
-	 * @return $this
-	 */
-	public function setLastError( $oLastError ) {
-		$this->oLastError = $oLastError;
-		return $this;
-	}
-
-	/**
-	 * @param string $sItemKey
-	 * @return $this
-	 */
-	public function removeRequestDataItem( $sItemKey ) {
-		$aData = $this->getRequestData();
-		if ( array_key_exists( $sItemKey, $aData ) ) {
-			unset( $aData[ $sItemKey ] );
-			$this->setRequestData( $aData, false );
-		}
-		return $this;
-	}
-
-	/**
 	 * @param array $aNewData
 	 * @param bool  $bMerge
 	 * @return $this
@@ -303,6 +324,30 @@ abstract class BaseApi {
 		$aData = $this->getRequestData();
 		$aData[ $sKey ] = $mValue;
 		$this->setRequestData( $aData, false );
+		return $this;
+	}
+
+	/**
+	 * @param array $aNewData
+	 * @param bool  $bMerge
+	 * @return $this
+	 */
+	public function setRequestQueryData( $aNewData, $bMerge = true ) {
+		if ( $bMerge ) {
+			$aNewData = array_merge( $this->getRequestQueryData(), $aNewData );
+		}
+		return $this->setParam( 'reqquery', $aNewData );
+	}
+
+	/**
+	 * @param string $sKey
+	 * @param mixed  $mValue
+	 * @return $this
+	 */
+	public function setRequestQueryDataItem( $sKey, $mValue ) {
+		$aData = $this->getRequestQueryData();
+		$aData[ $sKey ] = $mValue;
+		$this->setRequestQueryData( $aData, false );
 		return $this;
 	}
 
