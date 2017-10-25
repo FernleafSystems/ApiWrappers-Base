@@ -76,7 +76,7 @@ abstract class BaseApi {
 	 * @return string
 	 */
 	public function getResponseBodyContentRaw() {
-		return $this->getLastApiResponse()->getBody()->getContents();
+		return $this->hasLastApiResponse() ? $this->getLastApiResponse()->getBody()->getContents() : ''
 	}
 
 	/**
@@ -220,7 +220,8 @@ abstract class BaseApi {
 	 * @return bool
 	 */
 	public function isLastRequestSuccess() {
-		return in_array( $this->getLastApiResponse()->getStatusCode(), $this->getSuccessfulResponseCodes() );
+		return !$this->hasError() && $this->hasLastApiResponse() &&
+			   in_array( $this->getLastApiResponse()->getStatusCode(), $this->getSuccessfulResponseCodes() );
 	}
 
 	/**
@@ -228,6 +229,13 @@ abstract class BaseApi {
 	 */
 	public function hasError() {
 		return !is_null( $this->getLastError() );
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasLastApiResponse() {
+		return !is_null( $this->getLastApiResponse() );
 	}
 
 	/**
