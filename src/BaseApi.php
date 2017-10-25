@@ -76,7 +76,7 @@ abstract class BaseApi {
 	 * @return string
 	 */
 	public function getResponseBodyContentRaw() {
-		return $this->hasLastApiResponse() ? $this->getLastApiResponse()->getBody()->getContents() : ''
+		return $this->hasLastApiResponse() ? $this->getLastApiResponse()->getBody()->getContents() : '';
 	}
 
 	/**
@@ -105,12 +105,28 @@ abstract class BaseApi {
 		if ( is_null( $this->getConnection() ) ) {
 			throw new \Exception( 'Attempting to make API request without a Connection' );
 		}
+
+		array_map(
+			function ( $sItemKey ) {
+				if ( !$this->hasRequestDataItem( $sItemKey ) ) {
+					throw new \Exception( sprintf( 'Request Data Item "%s" must be provided', $sItemKey ) );
+				}
+			},
+			$this->getCriticalRequestItems()
+		);
 	}
 
 	/**
 	 * @return string
 	 */
 	abstract protected function getBaseUrl();
+
+	/**
+	 * @return array
+	 */
+	protected function getCriticalRequestItems() {
+		return [];
+	}
 
 	/**
 	 * @return Client
