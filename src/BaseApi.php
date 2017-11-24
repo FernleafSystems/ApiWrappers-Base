@@ -76,7 +76,13 @@ abstract class BaseApi {
 	 * @return string
 	 */
 	public function getResponseBodyContentRaw() {
-		return $this->hasLastApiResponse() ? $this->getLastApiResponse()->getBody()->getContents() : '';
+		$sContent = '';
+		if ( $this->hasLastApiResponse() ) {
+			$oBody = $this->getLastApiResponse()->getBody();
+			$oBody->rewind();
+			$sContent = $oBody->getContents();
+		}
+		return $sContent;
 	}
 
 	/**
