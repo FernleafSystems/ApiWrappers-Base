@@ -95,12 +95,24 @@ abstract class BaseApi {
 
 		$sChannel = $this->getDataChannel();
 		if ( $sChannel == 'query' ) {
-			$aFinal[ 'query' ] = array_merge( $this->getRequestDataFinal(), $this->getRequestQueryData() );
+			$aD = array_merge( $this->getRequestDataFinal(), $this->getRequestQueryData() );
+			if ( !empty( $aD ) ) {
+				$aFinal[ 'query' ] = $aD;
+			}
 		}
 		else {
-			$aFinal[ 'query' ] = $this->getRequestQueryData();
-			$aFinal[ $sChannel ] = $this->getRequestDataFinal();
+			$aD = $this->getRequestQueryData();
+			if ( !empty( $aD ) ) {
+				$aFinal[ 'query' ] = $aD;
+			}
+
+			$aD = $this->getRequestDataFinal();
+			if ( !empty( $aD ) ) {
+				$aFinal[ $sChannel ] = $aD;
+			}
 		}
+
+		// maybe use array_filter instead of all the ifs, what about non-array values?
 		return $aFinal;
 	}
 
