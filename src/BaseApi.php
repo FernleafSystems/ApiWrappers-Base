@@ -39,6 +39,18 @@ abstract class BaseApi {
 
 	/**
 	 * @return $this
+	 */
+	public function req() {
+		try {
+			$this->send();
+		}
+		catch ( \Exception $oE ) {
+		}
+		return $this;
+	}
+
+	/**
+	 * @return $this
 	 * @throws \Exception
 	 */
 	public function send() {
