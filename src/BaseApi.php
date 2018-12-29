@@ -17,14 +17,17 @@ abstract class BaseApi {
 	use ConnectionConsumer,
 		StdClassAdapter;
 	const REQUEST_METHOD = 'post';
+
 	/**
 	 * @var Client
 	 */
 	protected $oHttp;
+
 	/**
 	 * @var RequestException
 	 */
 	protected $oLastError;
+
 	/**
 	 * @var ResponseInterface
 	 */
@@ -309,7 +312,7 @@ abstract class BaseApi {
 	 * @return $this
 	 */
 	public function setDecodeAsArray( $bDecodeAsObject ) {
-		return $this->setRawDataItem( 'decode_response_as_array', $bDecodeAsObject );
+		return $this->setParam( 'decode_response_as_array', $bDecodeAsObject );
 	}
 
 	/**
@@ -335,7 +338,7 @@ abstract class BaseApi {
 	 * @return $this
 	 */
 	public function setRequestContentType( $sType ) {
-		return $this->setRawDataItem( 'request_content_type', $sType );
+		return $this->setParam( 'request_content_type', $sType );
 	}
 
 	/**
@@ -350,11 +353,11 @@ abstract class BaseApi {
 	}
 
 	/**
-	 * @param $aHeaders
+	 * @param array $aHeaders
 	 * @return $this
 	 */
 	public function setRequestHeaders( $aHeaders ) {
-		return $this->setRawDataItem( 'request_headers', $aHeaders );
+		return $this->setParam( 'request_headers', $aHeaders );
 	}
 
 	/**
