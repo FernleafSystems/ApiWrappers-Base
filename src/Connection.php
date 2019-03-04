@@ -5,17 +5,35 @@ namespace FernleafSystems\ApiWrappers\Base;
 /**
  * Class Connection
  * @package FernleafSystems\ApiWrappers\Base
- * @property string api_key
+ * @property string $account_id
+ * @property string $api_key
+ * @property string $api_version_override
  */
 class Connection {
 
 	use \FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
+	const API_URL = '';
+	const API_VERSION = '1';
 
 	/**
 	 * @deprecated
 	 * @var string
 	 */
 	protected $sApiKey;
+
+	/**
+	 * @return string
+	 */
+	public function getBaseUrl() {
+		return static::API_URL;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getApiVersion() {
+		return empty( $this->api_version_override ) ? static::API_VERSION : $this->api_version_override;
+	}
 
 	/**
 	 * @deprecated
