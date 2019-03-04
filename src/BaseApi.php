@@ -157,9 +157,13 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * Let the Connection class handle this, but there is the option to override how
+	 * this URL is formed here for weird APIs
 	 * @return string
 	 */
-	abstract protected function getBaseUrl();
+	protected function getBaseUrl() {
+		return $this->getConnection()->getBaseUrl();
+	}
 
 	/**
 	 * @return array
@@ -173,7 +177,7 @@ abstract class BaseApi {
 	 */
 	protected function getHttpRequest() {
 		if ( empty( $this->oHttp ) ) {
-			$this->oHttp = new Client( array( 'base_uri' => $this->getBaseUrl() ) );
+			$this->oHttp = new Client( [ 'base_uri' => $this->getBaseUrl() ] );
 		}
 		return $this->oHttp;
 	}
@@ -182,11 +186,11 @@ abstract class BaseApi {
 	 * @return string
 	 */
 	protected function getHttpRequestMethod() {
-		$sMethod = static::REQUEST_METHOD;
-		if ( !in_array( $sMethod, array( 'get', 'head', 'patch', 'post', 'put', 'delete' ) ) ) {
+		$sMethod = strtolower( static::REQUEST_METHOD );
+		if ( !in_array( $sMethod, [ 'get', 'head', 'patch', 'post', 'put', 'delete' ] ) ) {
 			$sMethod = 'get';
 		}
-		return strtolower( $sMethod );
+		return $sMethod;
 	}
 
 	/**
@@ -208,6 +212,13 @@ abstract class BaseApi {
 	 */
 	public function getLastError() {
 		return $this->oLastError;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getLastErrorContent() {
+		return $this->hasError() ? $this->getLastError()->getResponse()->getBody()->getContents() : '';
 	}
 
 	/**
@@ -281,6 +292,10 @@ abstract class BaseApi {
 		return [ 200, 201 ];
 	}
 
+	/**
+	 * @param string $sKey
+	 * @return bool
+	 */
 	public function hasRequestDataItem( $sKey ) {
 		return array_key_exists( $sKey, $this->getRequestData() );
 	}
@@ -297,14 +312,14 @@ abstract class BaseApi {
 	 * @return bool
 	 */
 	public function hasError() {
-		return !is_null( $this->getLastError() );
+		return $this->getLastError() instanceof RequestException;
 	}
 
 	/**
 	 * @return bool
 	 */
 	public function hasLastApiResponse() {
-		return !is_null( $this->getLastApiResponse() );
+		return $this->getLastApiResponse() instanceof ResponseInterface;
 	}
 
 	/**
@@ -328,11 +343,11 @@ abstract class BaseApi {
 	}
 
 	/**
-	 * @param bool $bDecodeAsObject
+	 * @param bool $bDecodeAsArray
 	 * @return $this
 	 */
-	public function setDecodeAsArray( $bDecodeAsObject ) {
-		return $this->setParam( 'decode_response_as_array', $bDecodeAsObject );
+	public function setDecodeAsArray( $bDecodeAsArray ) {
+		return $this->setParam( 'decode_response_as_array', $bDecodeAsArray );
 	}
 
 	/**

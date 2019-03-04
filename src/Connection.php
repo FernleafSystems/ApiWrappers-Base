@@ -7,9 +7,10 @@ namespace FernleafSystems\ApiWrappers\Base;
  * @package FernleafSystems\ApiWrappers\Base
  * @property string $account_id
  * @property string $api_key
- * @property string $api_version_override
+ * @property string $override_api_url
+ * @property string $override_api_version
  */
-class Connection {
+abstract class Connection {
 
 	use \FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 	const API_URL = '';
@@ -25,14 +26,21 @@ class Connection {
 	 * @return string
 	 */
 	public function getBaseUrl() {
-		return static::API_URL;
+		return sprintf( static::API_URL, $this->getApiVersion() );
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getApiUrl() {
+		return isset( $this->override_api_url ) ? $this->override_api_url : static::API_VERSION;
 	}
 
 	/**
 	 * @return string
 	 */
 	public function getApiVersion() {
-		return empty( $this->api_version_override ) ? static::API_VERSION : $this->api_version_override;
+		return isset( $this->override_api_version ) ? $this->override_api_version : static::API_VERSION;
 	}
 
 	/**
