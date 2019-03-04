@@ -58,6 +58,7 @@ abstract class BaseApi {
 	 */
 	public function send() {
 		$this->preSendVerification();
+		$this->preFlight();
 
 		$oClient = $this->getHttpRequest();
 
@@ -129,6 +130,12 @@ abstract class BaseApi {
 
 		// maybe use array_filter instead of all the ifs, what about non-array values?
 		return $aFinal;
+	}
+
+	/**
+	 * Do anything required before the API request is built and sent.
+	 */
+	protected function preFlight() {
 	}
 
 	/**
@@ -214,7 +221,20 @@ abstract class BaseApi {
 	 * @return string
 	 */
 	public function getDataChannel() {
-		return ( $this->getHttpRequestMethod() == 'get' ) ? 'query' : 'json';
+
+		switch ( $this->getRequestContentType() ) {
+
+			case 'application/x-www-form-urlencoded':
+				$sCh = 'form_params';
+				break;
+
+			case 'application/json':
+			case 'application/vnd.api+json':
+			default:
+				$sCh = ( $this->getHttpRequestMethod() == 'get' ) ? 'query' : 'json';
+				break;
+		}
+		return $sCh;
 	}
 
 	/**
