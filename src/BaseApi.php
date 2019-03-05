@@ -158,11 +158,12 @@ abstract class BaseApi {
 
 	/**
 	 * Let the Connection class handle this, but there is the option to override how
-	 * this URL is formed here for weird APIs
+	 * this URL is formed here for weird APIs/
+	 * Base URLs should generally have a trailing slash
 	 * @return string
 	 */
 	protected function getBaseUrl() {
-		return $this->getConnection()->getBaseUrl();
+		return rtrim( $this->getConnection()->getBaseUrl(), '/' ).'/';
 	}
 
 	/**
