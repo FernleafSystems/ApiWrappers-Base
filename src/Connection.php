@@ -33,7 +33,7 @@ abstract class Connection {
 	 * @return string
 	 */
 	public function getApiUrl() {
-		return isset( $this->override_api_url ) ? $this->override_api_url : static::API_VERSION;
+		return isset( $this->override_api_url ) ? $this->override_api_url : static::API_URL;
 	}
 
 	/**
