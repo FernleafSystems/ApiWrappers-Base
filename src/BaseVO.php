@@ -14,6 +14,6 @@ class BaseVO {
 	 * @return bool
 	 */
 	public function isValid() {
-		return !empty( $this->getRawDataAsArray() );
+		return count( $this->getRawDataAsArray() ) > 0;
 	}
 }
