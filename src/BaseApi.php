@@ -41,6 +41,15 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * Takes a unix timestamp and converts it to the standard format for sending dates for the particular API
+	 * @param int $nTimestamp
+	 * @return string|int|mixed
+	 */
+	static public function convertToStdDateFormat( $nTimestamp ) {
+		return $nTimestamp;
+	}
+
+	/**
 	 * @return $this
 	 */
 	public function req() {
@@ -81,7 +90,7 @@ abstract class BaseApi {
 	 * @return array
 	 */
 	public function getDecodedResponseBody() {
-		$sResponse = array();
+		$sResponse = [];
 		if ( !$this->hasError() ) {
 			$sResponse = json_decode( $this->getResponseBodyContentRaw(), $this->isDecodeAsArray() );
 		}
@@ -105,9 +114,9 @@ abstract class BaseApi {
 	 * @return array
 	 */
 	protected function prepFinalRequestData() {
-		$aFinal = array(
+		$aFinal = [
 			'headers' => $this->getRequestHeaders()
-		);
+		];
 
 		$sChannel = $this->getDataChannel();
 		if ( $sChannel == 'query' ) {
@@ -167,7 +176,7 @@ abstract class BaseApi {
 	}
 
 	/**
-	 * @return array
+	 * @return string[]
 	 */
 	protected function getCriticalRequestItems() {
 		return [];
@@ -264,10 +273,10 @@ abstract class BaseApi {
 	public function getRequestHeaders() {
 		return $this->getArrayParam(
 			'request_headers',
-			array(
+			[
 				'Accept'       => $this->getRequestContentType(),
 				'Content-Type' => $this->getRequestContentType(),
-			)
+			]
 		);
 	}
 
@@ -290,7 +299,7 @@ abstract class BaseApi {
 	 * @return int[]
 	 */
 	public function getSuccessfulResponseCodes() {
-		return [ 200, 201 ];
+		return [ 200, 201, 202, 204 ];
 	}
 
 	/**
