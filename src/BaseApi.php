@@ -98,6 +98,18 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * Helper method to quickly build a VO from a retrieve request
+	 * @return BaseVO|mixed|null
+	 */
+	public function asVo() {
+		$oVo = null;
+		if ( $this->req()->isLastRequestSuccess() ) {
+			$oVo = $this->getVO()->applyFromArray( $this->getDecodedResponseBody() );
+		}
+		return $oVo;
+	}
+
+	/**
 	 * @return BaseVO|mixed
 	 */
 	protected function getVO() {
