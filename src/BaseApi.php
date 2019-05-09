@@ -98,6 +98,13 @@ abstract class BaseApi {
 	}
 
 	/**
+	 * @return BaseVO|mixed
+	 */
+	protected function getVO() {
+		return new BaseVO();
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getResponseBodyContentRaw() {
