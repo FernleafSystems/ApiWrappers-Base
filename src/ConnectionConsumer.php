@@ -14,10 +14,20 @@ trait ConnectionConsumer {
 	private $oConnection;
 
 	/**
-	 * @return Connection
+	 * @return Connection|null
 	 */
 	public function getConnection() {
-		return $this->oConnection;
+		if ( empty( $this->oConnection ) ) {
+			$this->oConnection = $this->getDefaultConnection();
+		}
+		return empty( $this->oConnection ) ? $this->getDefaultConnection() : null;
+	}
+
+	/**
+	 * @return Connection|null
+	 */
+	public function getDefaultConnection() {
+		return null;
 	}
 
 	/**
