@@ -1,19 +1,10 @@
-<?php
+<?php declare( strict_types=1 );
 
 namespace FernleafSystems\ApiWrappers\Base;
 
-/**
- * Class BaseVO
- * @package FernleafSystems\ApiWrappers\Base
- */
-class BaseVO {
+class BaseVO extends \FernleafSystems\Utilities\Data\Adapter\DynPropertiesClass {
 
-	use \FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
-
-	/**
-	 * @return bool
-	 */
-	public function isValid() {
-		return count( $this->getRawDataAsArray() ) > 0;
+	public function isValid() :bool {
+		return count( $this->getRawData() ) > 0;
 	}
 }

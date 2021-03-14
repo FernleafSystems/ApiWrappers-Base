@@ -1,4 +1,4 @@
-<?php
+<?php declare( strict_types=1 );
 
 namespace FernleafSystems\ApiWrappers\Base;
 
@@ -10,61 +10,29 @@ namespace FernleafSystems\ApiWrappers\Base;
  * @property string $override_api_url
  * @property string $override_api_version
  */
-abstract class Connection {
+abstract class Connection extends \FernleafSystems\Utilities\Data\Adapter\DynPropertiesClass {
 
-	use \FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
 	const API_URL = '';
 	const API_VERSION = '1';
 
-	/**
-	 * @deprecated
-	 * @var string
-	 */
-	protected $sApiKey;
-
-	/**
-	 * @return string
-	 */
-	public function getBaseUrl() {
-		return sprintf( static::API_URL, $this->getApiVersion() );
+	public function getBaseUrl() :string {
+		return sprintf( $this->getApiUrl(), $this->getApiVersion() );
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getApiUrl() {
-		return isset( $this->override_api_url ) ? $this->override_api_url : static::API_URL;
+	public function getApiUrl() :string {
+		return $this->override_api_url ?? static::API_URL;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getApiVersion() {
-		return isset( $this->override_api_version ) ? $this->override_api_version : static::API_VERSION;
+	public function getApiVersion() :string {
+		return $this->override_api_version ?? static::API_VERSION;
 	}
 
-	/**
-	 * @deprecated
-	 * @return string
-	 */
-	public function getApiKey() {
-		return isset( $this->api_key ) ? $this->api_key : $this->sApiKey;
+	public function hasApiKey() :bool {
+		return !empty( $this->api_key );
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function hasApiKey() {
-		return !empty( $this->api_key ) || !empty( $this->sApiKey );
-	}
-
-	/**
-	 * @param string $sApiKey
-	 * @return $this
-	 */
-	public function setApiKey( $sApiKey ) {
-		$this->api_key = $sApiKey;
-		$this->sApiKey = $sApiKey;
+	public function setApiKey( string $key ) :self {
+		$this->api_key = $key;
 		return $this;
 	}
 }

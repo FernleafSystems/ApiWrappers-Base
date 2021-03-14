@@ -1,38 +1,24 @@
-<?php
+<?php declare( strict_types=1 );
 
 namespace FernleafSystems\ApiWrappers\Base;
 
-/**
- * Trait ConnectionConsumer
- * @package FernleafSystems\ApiWrappers\Base
- */
 trait ConnectionConsumer {
 
 	/**
 	 * @var Connection
 	 */
-	private $oConnection;
+	private ?Connection $apiConnection = null;
 
-	/**
-	 * @return Connection|null
-	 */
-	public function getConnection() {
-		return empty( $this->oConnection ) ? $this->getDefaultConnection() : $this->oConnection;
+	public function getConnection() :Connection {
+		return empty( $this->apiConnection ) ? $this->getDefaultConnection() : $this->apiConnection;
 	}
 
-	/**
-	 * @return Connection|null
-	 */
-	public function getDefaultConnection() {
+	public function getDefaultConnection() :?Connection {
 		return null;
 	}
 
-	/**
-	 * @param Connection $oConnection
-	 * @return $this
-	 */
-	public function setConnection( $oConnection ) {
-		$this->oConnection = $oConnection;
+	public function setConnection( Connection $conn ) :self {
+		$this->apiConnection = $conn;
 		return $this;
 	}
 }
