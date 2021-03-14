@@ -1,9 +1,10 @@
-<?php
+<?php declare( strict_types=1 );
 
 namespace FernleafSystems\ApiWrappers\Base;
 
-use FernleafSystems\Utilities\Data\Adapter\StdClassAdapter;
+use FernleafSystems\Utilities\Data\Adapter\DynPropertiesClass;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\ResponseInterface;
@@ -11,52 +12,71 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Class BaseApi
  * @package FernleafSystems\ApiWrappers\Base
+ * @property array  $reqdata
+ * @property array  $reqquery
+ * @property array  $request_headers
+ * @property string $request_content_type
+ * @property bool   $decode_response_as_array
  */
-abstract class BaseApi {
+abstract class BaseApi extends DynPropertiesClass {
 
-	use ConnectionConsumer,
-		StdClassAdapter;
+	use ConnectionConsumer;
+
 	const REQUEST_METHOD = 'post';
 
-	/**
-	 * @var Client
-	 */
-	protected $oHttp;
+	protected ?Client $httpClient = null;
 
-	/**
-	 * @var RequestException
-	 */
-	protected $oLastError;
+	protected ?RequestException $lastError = null;
 
-	/**
-	 * @var ResponseInterface
-	 */
-	protected $oLastResponse;
+	protected ?ResponseInterface $lastResponse = null;
 
-	/**
-	 * @param Connection $oConnection
-	 */
-	public function __construct( $oConnection = null ) {
-		$this->setConnection( $oConnection );
+	public function __construct( Connection $connection = null ) {
+		$this->setConnection( $connection );
+	}
+
+	public function __get( string $key ) {
+		$value = parent::__get( $key );
+		switch ( $key ) {
+
+			case 'reqdata':
+			case 'reqquery':
+			case 'request_headers':
+				if ( !is_array( $value ) ) {
+					$value = [];
+				}
+				break;
+
+			case 'request_content_type':
+				if ( empty( $value ) ) {
+					$value = 'application/json';
+				}
+				break;
+
+			case 'decode_response_as_array':
+				if ( is_null( $value ) ) {
+					$value = true;
+				}
+				break;
+			default:
+				break;
+		}
+		return $value;
 	}
 
 	/**
 	 * Takes a unix timestamp and converts it to the standard format for sending dates for the particular API
-	 * @param int $nTimestamp
+	 * @param int $timestamp
 	 * @return string|int|mixed
 	 */
-	static public function convertToStdDateFormat( $nTimestamp ) {
-		return $nTimestamp;
+	public static function convertToStdDateFormat( int $timestamp ) {
+		return $timestamp;
 	}
 
-	/**
-	 * @return $this
-	 */
-	public function req() {
+	public function req() :self {
 		try {
 			$this->send();
 		}
-		catch ( \Exception $oE ) {
+		catch ( \Exception $e ) {
 		}
 		return $this;
 	}
@@ -65,99 +85,97 @@ abstract class BaseApi {
 	 * @return $this
 	 * @throws \Exception
 	 */
-	public function send() {
+	public function send() :self {
 		$this->preSendVerification();
 		$this->preFlight();
 
-		$oClient = $this->getHttpRequest();
+		$client = $this->getHttpRequest();
 
-		$oRequest = new Request(
+		$request = new Request(
 			$this->getHttpRequestMethod(),
 			$this->getUrlEndpoint()
 		);
 		try {
 			$this->setLastError( null )
-				 ->setLastApiResponse( $oClient->send( $oRequest, $this->prepFinalRequestData() ) );
+				 ->setLastApiResponse( $client->send( $request, $this->prepFinalRequestData() ) );
 		}
-		catch ( RequestException $oRE ) {
-			$this->setLastError( $oRE );
+		catch ( RequestException $RE ) {
+			$this->setLastError( $RE );
+		}
+		catch ( GuzzleException $e ) {
+		}
+		catch ( \Exception $e ) {
 		}
 		return $this;
 	}
 
 	/**
-	 * Assumes response body is json-encode.  Override for anything else
+	 * Helper method to get json-decoded array from body.  Override for anything else
 	 * @return array
 	 */
-	public function getDecodedResponseBody() {
-		$sResponse = [];
+	public function getDecodedResponseBody() :array {
+		$response = [];
 		if ( !$this->hasError() ) {
-			$sResponse = json_decode( $this->getResponseBodyContentRaw(), $this->isDecodeAsArray() );
+			$response = json_decode( $this->getResponseBodyContentRaw(), $this->isDecodeAsArray() );
 		}
-		return $sResponse;
+		return $response;
 	}
 
 	/**
 	 * Helper method to quickly build a VO from a retrieve request
 	 * @return BaseVO|mixed|null
 	 */
-	public function asVo() {
-		$oVo = null;
+	public function asVo() :?BaseVO {
+		$VO = null;
 		if ( $this->req()->isLastRequestSuccess() ) {
-			$oVo = $this->getVO()->applyFromArray( $this->getDecodedResponseBody() );
+			$VO = $this->getVO()->applyFromArray( $this->getDecodedResponseBody() );
 		}
-		return $oVo;
+		return $VO;
 	}
 
 	/**
 	 * @return BaseVO|mixed
 	 */
-	protected function getVO() {
+	protected function getVO() :BaseVO {
 		return new BaseVO();
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getResponseBodyContentRaw() {
-		$sContent = '';
+	public function getResponseBodyContentRaw() :string {
+		$content = '';
 		if ( $this->hasLastApiResponse() ) {
-			$oBody = $this->getLastApiResponse()->getBody();
-			$oBody->rewind();
-			$sContent = $oBody->getContents();
+			$body = $this->getLastApiResponse()->getBody();
+			$body->rewind();
+			$content = $body->getContents();
 		}
-		return $sContent;
+		return $content;
 	}
 
-	/**
-	 * @return array
-	 */
-	protected function prepFinalRequestData() {
-		$aFinal = [
+	protected function prepFinalRequestData() :array {
+		$final = [
 			'headers' => $this->getRequestHeaders()
 		];
 
-		$sChannel = $this->getDataChannel();
-		if ( $sChannel == 'query' ) {
-			$aD = array_merge( $this->getRequestDataFinal(), $this->getRequestQueryData() );
-			if ( !empty( $aD ) ) {
-				$aFinal[ 'query' ] = $aD;
+		$channel = $this->getDataChannel();
+		if ( $channel == 'query' ) {
+			$reqData = array_merge( $this->getRequestDataFinal(), $this->getRequestQueryData() );
+			if ( !empty( $reqData ) ) {
+				$final[ 'query' ] = $reqData;
 			}
 		}
 		else {
-			$aD = $this->getRequestQueryData();
-			if ( !empty( $aD ) ) {
-				$aFinal[ 'query' ] = $aD;
+			$reqData = $this->getRequestQueryData();
+			if ( !empty( $reqData ) ) {
+				$final[ 'query' ] = $reqData;
 			}
 
-			$aD = $this->getRequestDataFinal();
-			if ( !empty( $aD ) ) {
-				$aFinal[ $sChannel ] = $aD;
+			$reqData = $this->getRequestDataFinal();
+			if ( !empty( $reqData ) ) {
+				$final[ $channel ] = $reqData;
 			}
 		}
 
 		// maybe use array_filter instead of all the ifs, what about non-array values?
-		return $aFinal;
+		return $final;
 	}
 
 	/**
@@ -170,14 +188,14 @@ abstract class BaseApi {
 	 * @throws \Exception
 	 */
 	protected function preSendVerification() {
-		if ( is_null( $this->getConnection() ) ) {
+		if ( !$this->getConnection() instanceof Connection ) {
 			throw new \Exception( 'Attempting to make API request without a Connection' );
 		}
 
 		array_map(
-			function ( $sItemKey ) {
-				if ( !$this->hasRequestDataItem( $sItemKey ) ) {
-					throw new \Exception( sprintf( 'Request Data Item "%s" must be provided', $sItemKey ) );
+			function ( $itemKey ) {
+				if ( !$this->hasRequestDataItem( $itemKey ) ) {
+					throw new \Exception( sprintf( 'Request Data Item "%s" must be provided', $itemKey ) );
 				}
 			},
 			$this->getCriticalRequestItems()
@@ -190,294 +208,193 @@ abstract class BaseApi {
 	 * Base URLs should generally have a trailing slash
 	 * @return string
 	 */
-	protected function getBaseUrl() {
+	protected function getBaseUrl() :string {
 		return rtrim( $this->getConnection()->getBaseUrl(), '/' ).'/';
 	}
 
 	/**
 	 * @return string[]
 	 */
-	protected function getCriticalRequestItems() {
+	protected function getCriticalRequestItems() :array {
 		return [];
 	}
 
-	/**
-	 * @return Client
-	 */
-	protected function getHttpRequest() {
-		if ( empty( $this->oHttp ) ) {
-			$this->oHttp = new Client( [ 'base_uri' => $this->getBaseUrl() ] );
+	protected function getHttpRequest() :Client {
+		if ( !$this->httpClient instanceof Client ) {
+			$this->httpClient = new Client( [ 'base_uri' => $this->getBaseUrl() ] );
 		}
-		return $this->oHttp;
+		return $this->httpClient;
 	}
 
-	/**
-	 * @return string
-	 */
-	protected function getHttpRequestMethod() {
-		$sMethod = strtolower( static::REQUEST_METHOD );
-		if ( !in_array( $sMethod, [ 'get', 'head', 'patch', 'post', 'put', 'delete' ] ) ) {
-			$sMethod = 'get';
+	protected function getHttpRequestMethod() :string {
+		$method = strtolower( static::REQUEST_METHOD );
+		if ( !in_array( $method, [ 'get', 'head', 'patch', 'post', 'put', 'delete' ] ) ) {
+			$method = 'get';
 		}
-		return $sMethod;
+		return $method;
 	}
 
-	/**
-	 * @return string
-	 */
-	protected function getUrlEndpoint() {
+	protected function getUrlEndpoint() :string {
 		return '';
 	}
 
-	/**
-	 * @return ResponseInterface
-	 */
-	public function getLastApiResponse() {
-		return $this->oLastResponse;
+	public function getLastApiResponse() :?ResponseInterface {
+		return $this->lastResponse;
 	}
 
-	/**
-	 * @return RequestException
-	 */
-	public function getLastError() {
-		return $this->oLastError;
+	public function getLastError() :?RequestException {
+		return $this->lastError;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getLastErrorContent() {
+	public function getLastErrorContent() :string {
 		return $this->hasError() ? $this->getLastError()->getResponse()->getBody()->getContents() : '';
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getRequestData() {
-		return $this->getArrayParam( 'reqdata' );
+	public function getRequestData() :array {
+		return $this->reqdata;
 	}
 
 	/**
 	 * @return string
 	 */
-	public function getDataChannel() {
+	public function getDataChannel() :string {
 
 		switch ( $this->getRequestContentType() ) {
 
 			case 'application/x-www-form-urlencoded':
-				$sCh = 'form_params';
+				$channel = 'form_params';
 				break;
 
 			case 'application/json':
 			case 'application/vnd.api+json':
 			default:
-				$sCh = ( $this->getHttpRequestMethod() == 'get' ) ? 'query' : 'json';
+				$channel = ( $this->getHttpRequestMethod() == 'get' ) ? 'query' : 'json';
 				break;
 		}
-		return $sCh;
+		return $channel;
 	}
 
 	/**
-	 * @param string $sKey
+	 * @param string $key
 	 * @return mixed|null
 	 */
-	public function getRequestDataItem( $sKey ) {
-		$aData = $this->getRequestData();
-		return isset( $aData[ $sKey ] ) ? $aData[ $sKey ] : null;
+	public function getRequestDataItem( string $key ) {
+		return $this->reqdata[ $key ] ?? null;
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getRequestHeaders() {
-		return $this->getArrayParam(
-			'request_headers',
-			[
+	public function getRequestHeaders() :array {
+		if ( empty( $this->request_headers ) ) {
+			$this->request_headers = [
 				'Accept'       => $this->getRequestContentType(),
 				'Content-Type' => $this->getRequestContentType(),
-			]
-		);
+			];
+		}
+		return $this->request_headers;
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function getRequestContentType() {
-		return $this->getStringParam( 'request_content_type', 'application/json' );
+	public function getRequestContentType() :string {
+		return $this->request_content_type;
 	}
 
 	/**
 	 * This allows us to set Query Params separately to the body of an API request, ?asdf=ghijk
-	 * @return array
 	 */
-	public function getRequestQueryData() {
-		return $this->getArrayParam( 'reqquery' );
+	public function getRequestQueryData() :array {
+		return $this->reqquery;
 	}
 
 	/**
 	 * @return int[]
 	 */
-	public function getSuccessfulResponseCodes() {
+	public function getSuccessfulResponseCodes() :array {
 		return [ 200, 201, 202, 204 ];
 	}
 
-	/**
-	 * @param string $sKey
-	 * @return bool
-	 */
-	public function hasRequestDataItem( $sKey ) {
-		return array_key_exists( $sKey, $this->getRequestData() );
+	public function hasError() :bool {
+		return $this->getLastError() instanceof RequestException;
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function isLastRequestSuccess() {
+	public function hasLastApiResponse() :bool {
+		return $this->getLastApiResponse() instanceof ResponseInterface;
+	}
+
+	public function hasRequestDataItem( string $key ) :bool {
+		return array_key_exists( $key, $this->getRequestData() );
+	}
+
+	public function isDecodeAsArray() :bool {
+		return (bool)$this->decode_response_as_array;
+	}
+
+	public function isLastRequestSuccess() :bool {
 		return !$this->hasError() && $this->hasLastApiResponse() &&
 			   in_array( $this->getLastApiResponse()->getStatusCode(), $this->getSuccessfulResponseCodes() );
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function hasError() {
-		return $this->getLastError() instanceof RequestException;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function hasLastApiResponse() {
-		return $this->getLastApiResponse() instanceof ResponseInterface;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function isDecodeAsArray() {
-		return (bool)$this->getParam( 'decode_response_as_array', true );
-	}
-
-	/**
-	 * @param string $sItemKey
-	 * @return $this
-	 */
-	public function removeRequestDataItem( $sItemKey ) {
+	public function removeRequestDataItem( string $key ) :self {
 		$aData = $this->getRequestData();
-		if ( array_key_exists( $sItemKey, $aData ) ) {
-			unset( $aData[ $sItemKey ] );
+		if ( array_key_exists( $key, $aData ) ) {
+			unset( $aData[ $key ] );
 			$this->setRequestData( $aData, false );
 		}
 		return $this;
 	}
 
-	/**
-	 * @param bool $bDecodeAsArray
-	 * @return $this
-	 */
-	public function setDecodeAsArray( $bDecodeAsArray ) {
-		return $this->setParam( 'decode_response_as_array', $bDecodeAsArray );
-	}
-
-	/**
-	 * @param ResponseInterface $oLastApiResponse
-	 * @return $this
-	 */
-	public function setLastApiResponse( $oLastApiResponse ) {
-		$this->oLastResponse = $oLastApiResponse;
+	public function setDecodeAsArray( bool $decodeAsArray ) :self {
+		$this->decode_response_as_array = $decodeAsArray;
 		return $this;
 	}
 
-	/**
-	 * @param RequestException $oLastError
-	 * @return $this
-	 */
-	public function setLastError( $oLastError ) {
-		$this->oLastError = $oLastError;
+	public function setLastApiResponse( ?ResponseInterface $lastApiResponse ) :self {
+		$this->lastResponse = $lastApiResponse;
 		return $this;
 	}
 
-	/**
-	 * @param string $sType
-	 * @return $this
-	 */
-	public function setRequestContentType( $sType ) {
-		return $this->setParam( 'request_content_type', $sType );
-	}
-
-	/**
-	 * @param string $sKey
-	 * @param string $sValue
-	 * @return $this
-	 */
-	public function setRequestHeader( $sKey, $sValue ) {
-		$aHeaders = $this->getRequestHeaders();
-		$aHeaders[ $sKey ] = $sValue;
-		return $this->setRequestHeaders( $aHeaders );
-	}
-
-	/**
-	 * @param array $aHeaders
-	 * @return $this
-	 */
-	public function setRequestHeaders( $aHeaders ) {
-		return $this->setParam( 'request_headers', $aHeaders );
-	}
-
-	/**
-	 * @param array $aNewData
-	 * @param bool  $bMerge
-	 * @return $this
-	 */
-	public function setRequestData( $aNewData, $bMerge = true ) {
-		if ( $bMerge ) {
-			$aNewData = array_merge( $this->getRequestData(), $aNewData );
-		}
-		return $this->setParam( 'reqdata', $aNewData );
-	}
-
-	/**
-	 * @param string $sKey
-	 * @param mixed  $mValue
-	 * @return $this
-	 */
-	public function setRequestDataItem( $sKey, $mValue ) {
-		$aData = $this->getRequestData();
-		$aData[ $sKey ] = $mValue;
-		$this->setRequestData( $aData, false );
+	public function setLastError( ?RequestException $lastError = null ) :self {
+		$this->lastError = $lastError;
 		return $this;
 	}
 
-	/**
-	 * @param array $aNewData
-	 * @param bool  $bMerge
-	 * @return $this
-	 */
-	public function setRequestQueryData( $aNewData, $bMerge = true ) {
-		if ( $bMerge ) {
-			$aNewData = array_merge( $this->getRequestQueryData(), $aNewData );
-		}
-		return $this->setParam( 'reqquery', $aNewData );
-	}
-
-	/**
-	 * @param string $sKey
-	 * @param mixed  $mValue
-	 * @return $this
-	 */
-	public function setRequestQueryDataItem( $sKey, $mValue ) {
-		$aData = $this->getRequestQueryData();
-		$aData[ $sKey ] = $mValue;
-		$this->setRequestQueryData( $aData, false );
+	public function setRequestContentType( string $type ) :self {
+		$this->request_content_type = $type;
 		return $this;
 	}
 
+	public function setRequestHeader( string $key, string $value ) :self {
+		$headers = $this->getRequestHeaders();
+		$headers[ $key ] = $value;
+		return $this->setRequestHeaders( $headers );
+	}
+
+	public function setRequestHeaders( array $headers ) :self {
+		$this->request_headers = $headers;
+		return $this;
+	}
+
+	public function setRequestData( array $newData, bool $merge = true ) :self {
+		$this->reqdata = $merge ? array_merge( $this->getRequestData(), $newData ) : $newData;
+		return $this;
+	}
+
+	public function setRequestDataItem( string $key, $mValue ) :self {
+		return $this->setRequestData( [ $key => $mValue ] );
+	}
+
+	public function setRequestQueryData( $newData, $merge = true ) :self {
+		$this->reqquery = $merge ? array_merge( $this->getRequestQueryData(), $newData ) : $newData;
+		return $this;
+	}
+
+	public function setRequestQueryDataItem( $key, $mValue ) :self {
+		return $this->setRequestQueryData( [ $key => $mValue ] );
+	}
+
 	/**
-	 * This is call right at the point of setting the data for the HTTP Request and should only
+	 * This is called right at the point of setting the data for the HTTP Request and should only
 	 * ever be used for that purpose.  use getRequestData() otherwise.
 	 * @return array
 	 */
-	public function getRequestDataFinal() {
+	public function getRequestDataFinal() :array {
 		return $this->getRequestData();
 	}
 }
