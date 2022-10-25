@@ -10,8 +10,6 @@ use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Class BaseApi
- * @package FernleafSystems\ApiWrappers\Base
  * @property array  $reqdata
  * @property array  $reqquery
  * @property array  $request_headers
@@ -65,7 +63,6 @@ abstract class BaseApi extends DynPropertiesClass {
 
 	/**
 	 * Takes a unix timestamp and converts it to the standard format for sending dates for the particular API
-	 * @param int $timestamp
 	 * @return string|int|mixed
 	 */
 	public static function convertToStdDateFormat( int $timestamp ) {

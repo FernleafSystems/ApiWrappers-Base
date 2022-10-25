@@ -13,8 +13,8 @@
   ],
   "require":      {
     "php":                       ">=7.4",
-    "fernleafsystems/utilities": "^1.4",
-    "guzzlehttp/guzzle":         "^7.0",
+    "fernleafsystems/utilities": "^1.5",
+    "guzzlehttp/guzzle":         "^7.5",
     "ext-json":                  "*"
   },
   "require-dev":  {

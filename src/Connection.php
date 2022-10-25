@@ -3,8 +3,6 @@
 namespace FernleafSystems\ApiWrappers\Base;
 
 /**
- * Class Connection
- * @package FernleafSystems\ApiWrappers\Base
  * @property string $account_id
  * @property string $api_key
  * @property string $override_api_url
