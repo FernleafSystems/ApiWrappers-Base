@@ -4,9 +4,6 @@ namespace FernleafSystems\ApiWrappers\Base;
 
 trait ConnectionConsumer {
 
-	/**
-	 * @var Connection
-	 */
 	private ?Connection $apiConnection = null;
 
 	public function getConnection() :Connection {
@@ -17,7 +14,7 @@ trait ConnectionConsumer {
 		return null;
 	}
 
-	public function setConnection( Connection $conn ) :self {
+	public function setConnection( ?Connection $conn ) :self {
 		$this->apiConnection = $conn;
 		return $this;
 	}
