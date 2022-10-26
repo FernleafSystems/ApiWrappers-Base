@@ -28,7 +28,7 @@ abstract class BaseApi extends DynPropertiesClass {
 
 	protected ?ResponseInterface $lastResponse = null;
 
-	public function __construct( Connection $connection = null ) {
+	public function __construct( ?Connection $connection = null ) {
 		$this->setConnection( $connection );
 	}
 
@@ -79,7 +79,6 @@ abstract class BaseApi extends DynPropertiesClass {
 	}
 
 	/**
-	 * @return $this
 	 * @throws \Exception
 	 */
 	public function send() :self {
@@ -108,7 +107,6 @@ abstract class BaseApi extends DynPropertiesClass {
 
 	/**
 	 * Helper method to get json-decoded array from body.  Override for anything else
-	 * @return array
 	 */
 	public function getDecodedResponseBody() :array {
 		$response = [];
@@ -203,7 +201,6 @@ abstract class BaseApi extends DynPropertiesClass {
 	 * Let the Connection class handle this, but there is the option to override how
 	 * this URL is formed here for weird APIs/
 	 * Base URLs should generally have a trailing slash
-	 * @return string
 	 */
 	protected function getBaseUrl() :string {
 		return rtrim( $this->getConnection()->getBaseUrl(), '/' ).'/';
@@ -251,9 +248,6 @@ abstract class BaseApi extends DynPropertiesClass {
 		return $this->reqdata;
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getDataChannel() :string {
 
 		switch ( $this->getRequestContentType() ) {
@@ -272,7 +266,6 @@ abstract class BaseApi extends DynPropertiesClass {
 	}
 
 	/**
-	 * @param string $key
 	 * @return mixed|null
 	 */
 	public function getRequestDataItem( string $key ) {
@@ -389,7 +382,6 @@ abstract class BaseApi extends DynPropertiesClass {
 	/**
 	 * This is called right at the point of setting the data for the HTTP Request and should only
 	 * ever be used for that purpose.  use getRequestData() otherwise.
-	 * @return array
 	 */
 	public function getRequestDataFinal() :array {
 		return $this->getRequestData();
