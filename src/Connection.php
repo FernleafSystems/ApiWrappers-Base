@@ -22,7 +22,7 @@ abstract class Connection extends \FernleafSystems\Utilities\Data\Adapter\DynPro
 	}
 
 	public function getApiVersion() :string {
-		return $this->override_api_version ?? static::API_VERSION;
+		return strval( $this->override_api_version ?? static::API_VERSION );
 	}
 
 	public function hasApiKey() :bool {
