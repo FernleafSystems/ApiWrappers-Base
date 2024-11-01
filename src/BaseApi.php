@@ -111,9 +111,9 @@ abstract class BaseApi extends DynPropertiesClass {
 	public function getDecodedResponseBody() :array {
 		$response = [];
 		if ( !$this->hasError() ) {
-			$response = json_decode( $this->getResponseBodyContentRaw(), $this->isDecodeAsArray() );
+			$response = \json_decode( $this->getResponseBodyContentRaw(), $this->isDecodeAsArray() );
 		}
-		return $response;
+		return \is_array( $response ) ? $response : [];
 	}
 
 	/**
