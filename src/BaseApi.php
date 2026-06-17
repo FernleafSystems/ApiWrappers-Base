@@ -221,9 +221,9 @@ abstract class BaseApi extends DynPropertiesClass {
 	}
 
 	protected function getHttpRequestMethod() :string {
-		$method = strtolower( static::REQUEST_METHOD );
-		if ( !in_array( $method, [ 'get', 'head', 'patch', 'post', 'put', 'delete' ] ) ) {
-			$method = 'get';
+		$method = \strtoupper( static::REQUEST_METHOD );
+		if ( !\in_array( $method, [ 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'DELETE' ] ) ) {
+			$method = 'GET';
 		}
 		return $method;
 	}
