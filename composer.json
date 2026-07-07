@@ -14,7 +14,7 @@
   "require":      {
     "php":                       ">=7.4",
     "fernleafsystems/utilities": "^1.5",
-    "guzzlehttp/guzzle":         "^7.5",
+    "guzzlehttp/guzzle":         "^7.13",
     "ext-json":                  "*"
   },
   "require-dev":  {
