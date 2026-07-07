@@ -259,7 +259,7 @@ abstract class BaseApi extends DynPropertiesClass {
 			case 'application/json':
 			case 'application/vnd.api+json':
 			default:
-				$channel = ( $this->getHttpRequestMethod() == 'get' ) ? 'query' : 'json';
+				$channel = ( $this->getHttpRequestMethod() == 'GET' ) ? 'query' : 'json';
 				break;
 		}
 		return $channel;
